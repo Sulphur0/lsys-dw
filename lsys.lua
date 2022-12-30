@@ -2,7 +2,7 @@
 math.randomseed(os.time())
 -- rules are 'key' 'value' pairs, where 'key' is the pattern and 'values' are the possible morphisms along their probability of occurence
 
-Lsys = {rules = {}, words = {}}
+Lsys = {rules = {}, words = {}, calls = {}, angle = 0}
 
 function Lsys:new(o)
 	o = o or {}
@@ -44,6 +44,33 @@ function Lsys:pregen_order(n)
 	end
 	table.insert(self.words,next_word)
 	current_word = next_word
+	end
+end
+
+function Lsys:draw(order, x, y)
+	-- assert that the order is cached
+	if self.words[order] then
+	-- rotate the space by the initial angle of the lsystem
+	love.graphics.push()
+	love.graphics.translate(x,y)
+	love.graphics.rotate(self.angle)
+	-- sort the keys by descending length
+	local tkeys = {}
+	for k in pairs(self.calls) do table.insert(tkeys, k) end
+	table.sort(tkeys, function (a,b) return string.len(a) < string.len(b) end)
+	-- tkeys holds sorted calls
+	-- call function associated 
+	for j = 1, string.len(self.words[order]) do
+	for _,k in ipairs(tkeys) do
+		if self.words[order]:sub(j,j+string.len(k)-1):find(k) then
+			-- call the associated function
+			if not (self.calls[k] == nil) then self.calls[k][1](self.calls[k][2]) end
+			j = j + string.len(k) - 1
+			break
+		end
+	end
+	end
+	love.graphics.pop()
 	end
 end
 
